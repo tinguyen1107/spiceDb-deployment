@@ -36,7 +36,7 @@ func main() {
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer secrettoken")
+		req.Header.Set("Authorization", "Bearer "+os.Getenv("SPICEDB_TOKEN"))
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -53,6 +53,8 @@ func main() {
 		}
 
 		fmt.Println("Response:", string(body))
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Get success", "data": string(body)})
+
 	})
 
 	err := r.Run()
