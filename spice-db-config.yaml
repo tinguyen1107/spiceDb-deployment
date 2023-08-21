@@ -1,0 +1,9 @@
+datastore:
+  type: memory
+api:
+  grpc:
+    addr: 0.0.0.0:50051 # gRPC API address
+  http:
+    addr: 0.0.0.0:50052 # HTTP API address
+log:
+  level: debug

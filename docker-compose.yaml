@@ -1,0 +1,63 @@
+version: "3"
+services:
+  go_server:
+    build: ./goserver
+    ports:
+      - "8081:8080"
+    env_file:
+      - ./goserver/.env
+    networks:
+      - internal_network
+    depends_on:
+      - spicedb
+
+  spicedb:
+    image: authzed/spicedb
+    networks:
+      internal_network:
+        ipv4_address: 172.21.0.6
+    volumes:
+      - ./spicedb-config.yaml:/etc/spicedb/spicedb-config.yaml
+      - ./schema.yml:/app/schema.yaml
+      - ./init-spicedb.sh:/app/init-spicedb.sh
+      - ./encryptions:/app/encryptions
+    command:
+      - serve
+      - --grpc-preshared-key
+      - "somerandomkeyhere"
+      # - --grpc-tls-cert-path
+      # - /app/encryptions/cert
+      # - --grpc-tls-key-path
+      # - /app/encryptions/key
+      - --datastore-bootstrap-files
+      - /app/schema.yaml
+      - --http-enabled
+      # - --datastore-engine
+      # - postgres
+      # - --datastore-conn-uri
+      # - postgresql://myuser:mypassword@172.21.0.7:5432/mydatabase
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    networks:
+      internal_network:
+        ipv4_address: 172.21.0.7
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "track_commit_timestamp=on"]
+
+networks:
+  internal_network:
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  postgres_data:
